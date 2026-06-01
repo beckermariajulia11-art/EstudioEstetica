@@ -100,6 +100,6 @@ Depois acesse no navegador: `https://localhost:5001`
 ## 👩‍🎓 Informações acadêmicas
 
 - **Disciplina:** Orientação a Objetos  
-- **Curso:** [seu curso]  
-- **Instituição:** [sua instituição]  
-- **Aluna:** [seu nome]
+- **Curso:** Ciência da Computação
+- **Instituição:** UTFPR
+- **Aluna:** Maria Julia Becker
