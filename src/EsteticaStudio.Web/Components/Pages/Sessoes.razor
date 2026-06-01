@@ -1,0 +1,226 @@
+@page "/sessoes"
+@rendermode InteractiveServer
+@using EsteticaStudio.Domain.Entities
+@using EsteticaStudio.Domain.Enums
+@inject EsteticaStudio.Application.Services.SessaoService SessaoService
+@inject EsteticaStudio.Application.Services.PacoteService PacoteService
+@inject EsteticaStudio.Application.Services.ProfissionalService ProfissionalService
+
+<PageTitle>Sessões</PageTitle>
+
+<div class="page-header">
+    <h2>📅 Sessões</h2>
+    <button class="btn btn-primary" @onclick="AbrirFormNovo">+ Agendar Sessão</button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensagem))
+{
+    <div class="alert @(erro ? "alert-danger" : "alert-success") alert-dismissible">
+        @mensagem <button type="button" class="btn-close" @onclick="() => mensagem = string.Empty"></button>
+    </div>
+}
+
+@* ── Formulário novo agendamento ── *@
+@if (mostrarForm)
+{
+    <div class="card form-card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Agendar Sessão</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Pacote Ativo *</label>
+                    <select class="form-select" @bind="idPacoteSel">
+                        <option value="">Selecione...</option>
+                        @foreach (var pk in pacotesAtivos)
+                        {
+                            <option value="@pk.Id">@pk.Cliente.Nome — @pk.Procedimento.Nome (saldo: @pk.SessoesDisponiveis)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Profissional *</label>
+                    <select class="form-select" @bind="idProfissionalSel">
+                        <option value="">Selecione...</option>
+                        @foreach (var p in profissionais)
+                        {
+                            <option value="@p.Id">@p.Nome (@p.Especialidade)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Data e Hora *</label>
+                    <input type="datetime-local" class="form-control" @bind="dataHorario" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Observações</label>
+                    <input class="form-control" @bind="observacoes" placeholder="Opcional..." />
+                </div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-success" @onclick="Agendar">Confirmar Agendamento</button>
+                <button class="btn btn-outline-secondary" @onclick="() => mostrarForm = false">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Formulário de remarcação ── *@
+@if (mostrarFormRemarcar)
+{
+    <div class="card form-card mb-4 border-warning">
+        <div class="card-body">
+            <h5 class="card-title">Remarcar Sessão</h5>
+            <div class="col-md-4">
+                <label class="form-label">Nova Data e Hora *</label>
+                <input type="datetime-local" class="form-control" @bind="novaDataHorario" />
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-warning" @onclick="ConfirmarRemarcar">Remarcar</button>
+                <button class="btn btn-outline-secondary" @onclick="() => mostrarFormRemarcar = false">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Filtros ── *@
+<div class="row g-2 mb-3">
+    <div class="col-auto">
+        <select class="form-select" @bind="filtroProfId" @bind:after="Filtrar">
+            <option value="">Todos os profissionais</option>
+            @foreach (var p in profissionais)
+            {
+                <option value="@p.Id">@p.Nome</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <input type="date" class="form-control" @bind="filtroData" @bind:after="Filtrar" />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-outline-secondary" @onclick="LimparFiltros">Limpar</button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Cliente</th><th>Procedimento</th><th>Profissional</th>
+                <th>Data / Hora</th><th>Status</th><th>Observações</th>
+                <th style="width:150px">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in sessoesFiltradas)
+            {
+                <tr>
+                    <td>@s.Pacote.Cliente.Nome</td>
+                    <td>@s.Pacote.Procedimento.Nome</td>
+                    <td>@s.Profissional.Nome</td>
+                    <td>@s.DataHorario.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td><span class="badge @BadgeClass(s.Status)">@s.Status</span></td>
+                    <td>@s.Observacoes</td>
+                    <td>
+                        @if (s.Status == StatusSessao.Agendada || s.Status == StatusSessao.Remarcada)
+                        {
+                            <button class="btn btn-sm btn-success me-1" title="Registrar comparecimento" @onclick="() => Comparecer(s.Id)">✔</button>
+                            <button class="btn btn-sm btn-warning me-1" title="Remarcar" @onclick="() => AbrirRemarcar(s.Id)">🔄</button>
+                            <button class="btn btn-sm btn-danger" title="Cancelar" @onclick="() => Cancelar(s.Id)">✖</button>
+                        }
+                        else { <span class="text-muted small">—</span> }
+                    </td>
+                </tr>
+            }
+            @if (!sessoesFiltradas.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma sessão encontrada.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    List<Sessao> sessoes = new(), sessoesFiltradas = new();
+    List<PacoteSessao> pacotesAtivos = new();
+    List<Profissional> profissionais = new();
+
+    bool mostrarForm, mostrarFormRemarcar, erro;
+    string mensagem = "", idPacoteSel = "", idProfissionalSel = "", observacoes = "";
+    string filtroProfId = "";
+    DateTime dataHorario = DateTime.Now.AddHours(1);
+    DateTime? filtroData;
+    DateTime novaDataHorario = DateTime.Now.AddDays(1);
+    Guid idRemarcar;
+
+    protected override void OnInitialized()
+    {
+        profissionais = ProfissionalService.Listar();
+        pacotesAtivos = PacoteService.Listar().Where(p => p.Status == StatusPacote.Ativo && p.SessoesDisponiveis > 0).ToList();
+        Carregar();
+    }
+
+    void Carregar() { sessoes = SessaoService.Listar(); Filtrar(); }
+
+    void Filtrar()
+    {
+        var q = sessoes.AsEnumerable();
+        if (!string.IsNullOrEmpty(filtroProfId) && Guid.TryParse(filtroProfId, out var gp))
+            q = q.Where(s => s.Profissional.Id == gp);
+        if (filtroData.HasValue)
+            q = q.Where(s => s.DataHorario.Date == filtroData.Value.Date);
+        sessoesFiltradas = q.OrderBy(s => s.DataHorario).ToList();
+    }
+
+    void LimparFiltros() { filtroProfId = ""; filtroData = null; Filtrar(); }
+
+    void AbrirFormNovo()
+    {
+        mostrarForm = true;
+        pacotesAtivos = PacoteService.Listar().Where(p => p.Status == StatusPacote.Ativo && p.SessoesDisponiveis > 0).ToList();
+        idPacoteSel = idProfissionalSel = observacoes = "";
+        dataHorario = DateTime.Now.AddHours(1);
+    }
+
+    void Agendar()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(idPacoteSel) || string.IsNullOrEmpty(idProfissionalSel))
+                throw new Exception("Selecione pacote e profissional.");
+            SessaoService.Agendar(Guid.Parse(idPacoteSel), Guid.Parse(idProfissionalSel), dataHorario, observacoes);
+            mostrarForm = false; Carregar(); Msg("Sessão agendada!", false);
+        }
+        catch (Exception ex) { Msg(ex.Message, true); }
+    }
+
+    void Comparecer(Guid id)
+    {
+        try { SessaoService.RegistrarComparecimento(id); Carregar(); Msg("Comparecimento registrado! Sessão consumida do pacote.", false); }
+        catch (Exception ex) { Msg(ex.Message, true); }
+    }
+
+    void AbrirRemarcar(Guid id) { idRemarcar = id; novaDataHorario = DateTime.Now.AddDays(1); mostrarFormRemarcar = true; }
+
+    void ConfirmarRemarcar()
+    {
+        try { SessaoService.Remarcar(idRemarcar, novaDataHorario); mostrarFormRemarcar = false; Carregar(); Msg("Sessão remarcada!", false); }
+        catch (Exception ex) { Msg(ex.Message, true); }
+    }
+
+    void Cancelar(Guid id)
+    {
+        try { SessaoService.Cancelar(id); Carregar(); Msg("Sessão cancelada!", false); }
+        catch (Exception ex) { Msg(ex.Message, true); }
+    }
+
+    string BadgeClass(StatusSessao s) => s switch
+    {
+        StatusSessao.Agendada  => "bg-primary",
+        StatusSessao.Realizada => "bg-success",
+        StatusSessao.Cancelada => "bg-secondary",
+        StatusSessao.Remarcada => "bg-warning text-dark",
+        _ => "bg-light text-dark"
+    };
+
+    void Msg(string m, bool e) { mensagem = m; erro = e; }
+}

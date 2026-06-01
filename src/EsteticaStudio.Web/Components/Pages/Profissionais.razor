@@ -1,0 +1,105 @@
+@page "/profissionais"
+@rendermode InteractiveServer
+@using EsteticaStudio.Domain.Entities
+@inject EsteticaStudio.Application.Services.ProfissionalService ProfissionalService
+
+<PageTitle>Profissionais</PageTitle>
+
+<div class="page-header">
+    <h2>💼 Profissionais</h2>
+    <button class="btn btn-primary" @onclick="AbrirFormNovo">+ Novo Profissional</button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensagem))
+{
+    <div class="alert @(erro ? "alert-danger" : "alert-success") alert-dismissible">
+        @mensagem <button type="button" class="btn-close" @onclick="() => mensagem = string.Empty"></button>
+    </div>
+}
+
+@if (mostrarForm)
+{
+    <div class="card form-card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@(editando ? "Editar Profissional" : "Novo Profissional")</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nome *</label>
+                    <input class="form-control" @bind="nome" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Especialidade</label>
+                    <input class="form-control" @bind="especialidade" placeholder="Ex: Esteticista, Dermopigmentadora..." />
+                </div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-success" @onclick="Salvar">Salvar</button>
+                <button class="btn btn-outline-secondary" @onclick="() => mostrarForm = false">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mb-3">
+    <input class="form-control" style="max-width:360px" @bind="busca" @bind:event="oninput" placeholder="🔍 Buscar..." />
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr><th>Nome</th><th>Especialidade</th><th style="width:120px">Ações</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Filtrados)
+            {
+                <tr>
+                    <td>@p.Nome</td><td>@p.Especialidade</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => AbrirEditar(p)">✏</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Remover(p.Id)">🗑</button>
+                    </td>
+                </tr>
+            }
+            @if (!Filtrados.Any())
+            {
+                <tr><td colspan="3" class="text-center text-muted py-4">Nenhum profissional encontrado.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    List<Profissional> lista = new();
+    string busca = "", nome = "", especialidade = "";
+    bool mostrarForm, editando, erro;
+    string mensagem = "";
+    Guid idEditando;
+
+    IEnumerable<Profissional> Filtrados => string.IsNullOrWhiteSpace(busca) ? lista
+        : lista.Where(p => p.Nome.Contains(busca, StringComparison.OrdinalIgnoreCase)
+                        || p.Especialidade.Contains(busca, StringComparison.OrdinalIgnoreCase));
+
+    protected override void OnInitialized() => lista = ProfissionalService.Listar();
+    void AbrirFormNovo() { editando = false; mostrarForm = true; nome = especialidade = ""; }
+    void AbrirEditar(Profissional p) { editando = true; mostrarForm = true; idEditando = p.Id; nome = p.Nome; especialidade = p.Especialidade; }
+
+    void Salvar()
+    {
+        try
+        {
+            if (editando) ProfissionalService.Atualizar(idEditando, nome, especialidade);
+            else ProfissionalService.Cadastrar(nome, especialidade);
+            mostrarForm = false; lista = ProfissionalService.Listar();
+            Msg(editando ? "Profissional atualizado!" : "Profissional cadastrado!", false);
+        }
+        catch (Exception ex) { Msg(ex.Message, true); }
+    }
+
+    void Remover(Guid id)
+    {
+        try { ProfissionalService.Remover(id); lista = ProfissionalService.Listar(); Msg("Profissional removido!", false); }
+        catch (Exception ex) { Msg(ex.Message, true); }
+    }
+
+    void Msg(string m, bool e) { mensagem = m; erro = e; }
+}

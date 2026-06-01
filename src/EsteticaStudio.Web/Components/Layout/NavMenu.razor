@@ -1,0 +1,55 @@
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">💆 Estúdio de Estética</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span aria-hidden="true">🏠</span> Início
+            </NavLink>
+        </div>
+
+        <div class="nav-category px-3 mt-2">CADASTROS</div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="clientes">
+                <span aria-hidden="true">👤</span> Clientes
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="profissionais">
+                <span aria-hidden="true">💼</span> Profissionais
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="procedimentos">
+                <span aria-hidden="true">✨</span> Procedimentos
+            </NavLink>
+        </div>
+
+        <div class="nav-category px-3 mt-2">COMERCIAL</div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="pacotes">
+                <span aria-hidden="true">📦</span> Pacotes
+            </NavLink>
+        </div>
+
+        <div class="nav-category px-3 mt-2">AGENDA</div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="sessoes">
+                <span aria-hidden="true">📅</span> Sessões
+            </NavLink>
+        </div>
+
+    </nav>
+</div>

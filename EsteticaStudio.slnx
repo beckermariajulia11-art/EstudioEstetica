@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EsteticaStudio.Application/EsteticaStudio.Application.csproj" />
+    <Project Path="src/EsteticaStudio.ConsoleApp/EsteticaStudio.ConsoleApp.csproj" />
+    <Project Path="src/EsteticaStudio.Domain/EsteticaStudio.Domain.csproj" />
+    <Project Path="src/EsteticaStudio.Infrastructure/EsteticaStudio.Infrastructure.csproj" />
+  </Folder>
+</Solution>

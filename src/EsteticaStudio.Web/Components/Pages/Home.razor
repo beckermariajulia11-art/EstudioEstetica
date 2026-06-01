@@ -1,0 +1,47 @@
+@page "/"
+
+<PageTitle>Estúdio de Estética</PageTitle>
+
+<div class="dashboard">
+    <h1>💆 Estúdio de Estética</h1>
+    <p class="lead">Sistema de gestão de sessões de atendimento.</p>
+
+    <div class="cards-grid">
+        <a href="clientes" class="dash-card">
+            <div class="dash-icon">👤</div>
+            <div class="dash-label">Clientes</div>
+            <div class="dash-desc">Cadastre e gerencie clientes</div>
+        </a>
+        <a href="profissionais" class="dash-card">
+            <div class="dash-icon">💼</div>
+            <div class="dash-label">Profissionais</div>
+            <div class="dash-desc">Gerencie a equipe do estúdio</div>
+        </a>
+        <a href="procedimentos" class="dash-card">
+            <div class="dash-icon">✨</div>
+            <div class="dash-label">Procedimentos</div>
+            <div class="dash-desc">Configure os serviços oferecidos</div>
+        </a>
+        <a href="pacotes" class="dash-card">
+            <div class="dash-icon">📦</div>
+            <div class="dash-label">Pacotes</div>
+            <div class="dash-desc">Venda pacotes e consulte saldos</div>
+        </a>
+        <a href="sessoes" class="dash-card">
+            <div class="dash-icon">📅</div>
+            <div class="dash-label">Sessões</div>
+            <div class="dash-desc">Agende e gerencie sessões</div>
+        </a>
+    </div>
+</div>
+
+<style>
+    .dashboard { padding: 1.5rem 0; }
+    .lead { color: #6c757d; margin-bottom: 2rem; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1.25rem; }
+    .dash-card { display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; border: 1px solid #dee2e6; border-radius: 12px; text-decoration: none; color: inherit; background: #fff; transition: box-shadow 0.2s, transform 0.2s; }
+    .dash-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); transform: translateY(-2px); text-decoration: none; color: inherit; }
+    .dash-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .dash-label { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.25rem; }
+    .dash-desc { font-size: 0.85rem; color: #6c757d; text-align: center; }
+</style>
